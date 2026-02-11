@@ -1,0 +1,30 @@
+
+services:
+
+
+  # app:
+  #   container_name: edupro_backend
+  #   build: .
+  #   ports: 
+  #     - "8000:8000"
+  #   environment:
+  #     - DATABASE_URL: postgres://user:password@db:5432/edu_pro
+
+  db:
+    image: postgres:18.1-bookworm
+    container_name: hiringsystem
+    ports: 
+      - "5432:5432"
+    
+    environment:
+      POSTGRES_USER: app_user
+      POSTGRES_PASSWORD: app_password
+      POSTGRES_DB: edu_pro
+
+    volumes:
+      - pg_data:/var/lib/postgresql/pg_data
+
+  
+
+volumes:
+  pg_data:
