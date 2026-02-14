@@ -18,6 +18,7 @@ class JobRead(JobBase):
     id: int
     organization_id: int
     date_posted: datetime
+    application_count: int = 0
 
 class JobUpdate(BaseModel):
     title: Optional[str] = None

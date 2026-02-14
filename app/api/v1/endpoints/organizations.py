@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import FileResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import Session, select
 from typing import Any
@@ -59,6 +60,8 @@ def login_organization(
     }
 
 from app.models.job import Job
+from app.models.application import Application
+from app.models.user import User
 from app.schemas.job import JobCreate, JobRead
 from app.models.organization import Organization
 from typing import List
@@ -92,4 +95,32 @@ def read_jobs(
     return session.exec(
         select(Job).where(Job.organization_id == current_org.id).offset(skip).limit(limit)
     ).all()
+
+@router.get("/applications/{application_id}/cv")
+def download_applicant_cv(
+    *,
+    session: Session = Depends(get_session),
+    application_id: int,
+    current_org: Organization = Depends(deps.get_current_organization),
+) -> Any:
+    """
+    Download the CV for a specific job application.
+    Only the organization that posted the job can download the CV.
+    """
+    application = session.get(Application, application_id)
+    if not application:
+        raise HTTPException(status_code=404, detail="Application not found")
+    
+    job = session.get(Job, application.job_id)
+    if not job or job.organization_id != current_org.id:
+        raise HTTPException(
+            status_code=403,
+            detail="You do not have permission to access this CV."
+        )
+    
+    user = session.get(User, application.user_id)
+    if not user or not user.cv_path:
+        raise HTTPException(status_code=404, detail="CV not found for this applicant")
+    
+    return FileResponse(user.cv_path)
 

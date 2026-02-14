@@ -13,6 +13,10 @@ class Job(SQLModel, table=True):
     min_age: Optional[int] = None
     max_age: Optional[int] = None
     organization_id: int = Field(foreign_key="organization.id")
-    
+
     organization: "Organization" = Relationship(back_populates="jobs")
     applications: List["Application"] = Relationship(back_populates="job")
+
+    @property
+    def application_count(self) -> int:
+        return len(self.applications)

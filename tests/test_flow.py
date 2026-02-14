@@ -109,11 +109,25 @@ def test_full_hiring_flow():
     response = client.post(f"/api/v1/users/apply/{job_id}", headers=user_headers)
     assert response.status_code == 200
     assert response.json()["message"] == "Application submitted successfully"
+    application_id = response.json()["application_id"]
 
     # 9. Duplicate Application Check
     response = client.post(f"/api/v1/users/apply/{job_id}", headers=user_headers)
     assert response.status_code == 400
     assert response.json()["detail"] == "Already applied for this job"
+
+    # 10. Check Application Count (Organization viewpoint)
+    response = client.get("/api/v1/organizations/jobs", headers=org_headers)
+    assert response.status_code == 200
+    # Find the job we created
+    job_in_list = next(j for j in response.json() if j["id"] == job_id)
+    assert job_in_list["application_count"] == 1
+
+    # 11. Download Applicant CV (Organization viewpoint)
+    response = client.get(f"/api/v1/organizations/applications/{application_id}/cv", headers=org_headers)
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "application/pdf"
+    assert response.content == b"This is a fake CV."
 
 if __name__ == "__main__":
     # Allow running directly or via pytest
